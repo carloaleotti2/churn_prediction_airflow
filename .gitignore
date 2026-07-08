@@ -1,0 +1,35 @@
+# Ambiente Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# File di Airflow e Docker
+logs/
+*.log
+.env
+airflow.db
+airflow-webserver.pid
+
+# Cartelle di dati e modelli (se sono grandi)
+data/
+models/
+*.pkl
+*.h5
+*.joblib
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb
