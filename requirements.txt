@@ -1,0 +1,7 @@
+pandas
+numpy
+scikit-learn
+xgboost
+pyarrow
+mlflow>=2.14
+psycopg2-binary

@@ -1,0 +1,101 @@
+Variable;Significado;
+Rev_Mean;Mean monthly revenue (charge amount);
+mou_Mean;Mean number of monthly minutes of use;
+totmrc_Mean;Mean total monthly recurring charge;
+da_Mean;Mean number of directory assisted calls;
+ovrmou_Mean;Mean overage minutes of use;
+ovrrev_Mean;Mean overage revenue;
+vceovr_Mean;Mean revenue of voice overage;
+datovr_Mean;Mean revenue of data overage;
+roam_Mean;Mean number of roaming calls;
+change_mou;Percentage change in monthly minutes of use vs previous three month average;
+change_rev;Percentage change in monthly revenue vs previous three month average;
+drop_vce_Mean;Mean number of dropped (failed) voice calls;
+drop_dat_Mean;Mean number of dropped (failed) data calls;
+blck_vce_Mean;Mean number of blocked (failed) voice calls;
+blck_dat_Mean;Mean number of blocked (failed) data calls;
+unan_vce_Mean;Mean number of unanswered voice calls;
+unan_dat_Mean;Mean number of unanswered data calls;
+plcd_vce_Mean;Mean number of attempted voice calls placed;
+plcd_dat_Mean;Mean number of attempted data calls placed;
+recv_vce_Mean;Mean number of received voice calls;
+recv_sms_Mean;Mean number of received sms;
+comp_vce_Mean;Mean number of completed voice calls;
+comp_dat_Mean;Mean number of completed data calls;
+custcare_Mean;Mean number of customer care calls;
+ccrndmou_Mean;Mean rounded minutes of use of customer care calls;
+cc_mou_Mean;Mean unrounded minutes of use of customer care (see CUSTCARE_MEAN) calls;
+inonemin_Mean;Mean number of inbound calls less than one minute;
+threeway_Mean;Mean number of three way calls;
+mou_cvce_Mean;Mean unrounded minutes of use of completed voice calls;
+mou_cdat_Mean;Mean unrounded minutes of use of completed data calls;
+mou_rvce_Mean;Mean unrounded minutes of use of received voice calls;
+owylis_vce_Mean;Mean number of outbound wireless to wireless voice calls;
+mouowylisv_Mean;Mean unrounded minutes of use of outbound wireless to wireless voice calls;
+iwylis_vce_Mean;Mean number of inbound wireless to wireless voice calls;
+mouiwylisv_Mean;Mean unrounded minutes of use of inbound wireless to wireless voice calls;
+peak_vce_Mean;Mean number of inbound and outbound peak voice calls;
+peak_dat_Mean;Mean number of peak data calls;
+mou_peav_Mean;Mean unrounded minutes of use of peak voice calls;
+mou_pead_Mean;Mean unrounded minutes of use of peak data calls;
+opk_vce_Mean;Mean number of off-peak voice calls;
+opk_dat_Mean;Mean number of off-peak data calls;
+mou_opkv_Mean;Mean unrounded minutes of use of off-peak voice calls;
+mou_opkd_Mean;Mean unrounded minutes of use of off-peak data calls;
+drop_blk_Mean;Mean number of dropped or blocked calls;
+attempt_Mean;Mean number of attempted calls;
+complete_Mean;Mean number of completed calls;
+callfwdv_Mean;Mean number of call forwarding calls;
+callwait_Mean;Mean number of call waiting calls;
+churn;Instance of churn between 31-60 days after observation date;
+months;Total number of months in service;Integer
+uniqsubs;Number of unique subscribers in the household;Integer
+actvsubs;Number of active subscribers in household;Integer
+text_formatnew_cell;New cell phone user;U/Y/N
+text_formatcrclscod;Credit class code;Categorical
+checkasl_flag;Account spending limit;Y/N
+totcalls;Total number of calls over the life of the customer;Integer
+totmou;Total minutes of use over the life of the customer;Float
+totrev;Total revenue;Float
+adjrev;Billing adjusted total revenue over the life of the customer;Float
+adjmou;Billing adjusted total minutes of use over the life of the customer;Float
+adjqty;Billing adjusted total number of calls over the life of the customer;Integer
+avgrev;Average monthly revenue over the life of the customer;Float
+avgmou;Average monthly minutes of use over the life of the customer;Float
+avgqty;Average monthly number of calls over the life of the customer;Float
+avg3mou;Average monthly minutes of use over the previous three months;Float
+avg3qty;Average monthly number of calls over the previous three months;Float
+avg3rev;Average monthly revenue over the previous three months;Float
+avg6mou;Average monthly minutes of use over the previous six months;Float
+avg6qty;Average monthly number of calls over the previous six months;Float
+avg6rev;Average monthly revenue over the previous six months;Float
+text_formatprizm_social_one;Social group letter only;S/U/C/T/R
+text_formatarea;Geogrpahic area;Categorical
+text_formatdualband;Dualband;Y/N/T/U
+text_formatrefurb_new;Handset: refurbished or new;N/R
+hnd_price;Current handset price;Float
+phones;Number of handsets issued;Categorical
+models;Number of models issued;Categorical
+text_formathnd_webcap;Handset web capability;WCMB/ WC / UNKW
+truck;Truck indicator;0/1
+rv;RV indicator;0/1
+text_formatownrent;Home owner/renter status;O/R
+lor;Length of residence;Integer
+text_formatdwlltype;Dwelling Unit type;S/M
+text_formatmarital;Marital Status;U/M/S/B/A
+adults;Number of adults in household;Integer
+text_formatinfobase;InfoBase match;M/N
+income;Estimated income;Integer
+numbcars;Known number of vehicles;Categorical
+text_formatHHstatin;Premier household status indicator;Categorical
+text_formatdwllsize;Dwelling size;Categorical
+forgntvl;Foreign travel dummy variable;Y/N
+text_formatethnic;Ethnicity roll-up code;Categorical
+text_formatkid0_2;Child 0 - 2 years of age in household;U/Y
+text_formatkid3_5;Child 3 - 5 years of age in household;U/Y
+text_formatkid6_10;Child 6 - 10 years of age in household;U/Y
+text_formatkid11_15;Child 11 - 15 years of age in household;U/Y
+text_formatkid16_17;Child 16 - 17 years of age in household;U/Y
+checkcreditcd;Credit card indicator;Y/N
+eqpdays;Number of days (age) of current mobile phone;Integer
+vpn_keyCustomer_ID;Customer ID;
