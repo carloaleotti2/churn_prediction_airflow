@@ -61,9 +61,6 @@ churn_prediction_airflow/
 │   ├── Test_native_categorical.py        # confronto: encoding nativo XGBoost vs manuale
 │   ├── Test_hyperparameter_tuning.py     # confronto: tuning esteso vs iperparametri in produzione
 │   └── Test_feature_engineering.py       # confronto: feature aggiuntive (interazioni, trend, missingness)
-├── shap_summary_global.png               # output SHAP: importanza globale feature
-├── shap_importance_bar.png               # output SHAP: bar plot importanza
-├── shap_waterfall_high_risk_customer.png # output SHAP: spiegazione locale cliente ad alto rischio
 ├── docker-compose.yaml
 ├── Dockerfile
 ├── requirements.txt
