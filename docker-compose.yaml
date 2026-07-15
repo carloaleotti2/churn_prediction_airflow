@@ -76,6 +76,10 @@ x-airflow-common:
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     # The following line can be used to set a custom config file, stored in the local config folder
     AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
+    RAW_DATA_PATH: ${RAW_DATA_PATH:-/opt/airflow/data/raw/dataset.csv}
+    PROCESSED_DATA_DIR: ${PROCESSED_DATA_DIR:-/opt/airflow/data/processed}
+    MODEL_DIR: ${MODEL_DIR:-/opt/airflow/models}
+    METRICS_DIR: ${METRICS_DIR:-/opt/airflow/logs/metrics}
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
@@ -348,6 +352,19 @@ services:
         postgres:
           condition: service_healthy
 
+  process-db-init:
+      image: postgres:16
+      environment:
+        PGPASSWORD: airflow
+      entrypoint: >
+        bash -c "until pg_isready -h postgres -U airflow; do sleep 1; done;
+        psql -h postgres -U airflow -d airflow -tc \"SELECT 1 FROM pg_database WHERE datname = 'process_tracking'\" | grep -q 1 ||
+        psql -h postgres -U airflow -d airflow -c \"CREATE DATABASE process_tracking\""
+      depends_on:
+        postgres:
+          condition: service_healthy
+
+
   mlflow:
       image: ghcr.io/mlflow/mlflow:latest
       command: >
@@ -362,4 +379,3 @@ services:
       restart: always
 volumes:
   postgres-db-volume:
-  mlflow_artifacts:

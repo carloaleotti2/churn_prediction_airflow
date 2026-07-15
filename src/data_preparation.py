@@ -4,14 +4,17 @@ Legge il dataset raw, fa split, imputazione, target encoding, one-hot.
 Salva X_train/X_test/y_train/y_test + artifact di preprocessing su disco condiviso.
 Nessuna dipendenza da Airflow: funzione pura, testabile standalone.
 """
+from process_logger import log_event
+from datetime import datetime, timezone
 import pandas as pd
 import numpy as np
 import pickle
 from pathlib import Path
 from sklearn.model_selection import train_test_split
- 
-RAW_DATA_PATH = "/opt/airflow/data/raw/dataset.csv"
-OUTPUT_DIR = Path("/opt/airflow/data/processed")
+import os 
+
+RAW_DATA_PATH = os.environ.get("RAW_DATA_PATH", "/opt/airflow/data/raw/dataset.csv") 
+OUTPUT_DIR = Path(os.environ.get("PROCESSED_DATA_DIR", "/opt/airflow/data/processed"))
  
 NUM_COLS = [
     'rev_Mean', 'mou_Mean', 'totmrc_Mean', 'da_Mean', 'ovrmou_Mean',
@@ -41,10 +44,34 @@ SKEWED_VARS = ['totrev', 'mou_Mean']
 HIGH_CARD_COLS = ['crclscod', 'area', 'ethnic']
 MIN_OBS = 30
 MISSING_THRESHOLD = 35  # % oltre il quale una colonna viene droppata
- 
- 
-def prepare_data(input_path: str = RAW_DATA_PATH, output_dir: Path = OUTPUT_DIR):
-    output_dir.mkdir(parents=True, exist_ok=True)
+
+class SchemaValidationError(Exception):
+    """Sollevato quando il dataset in input non rispetta lo schema minimo atteso."""
+    pass 
+
+def validate_input_schema(df: pd.DataFrame):
+    """Verifica che le colonne critiche siano presenti prima di processare.
+    Non blocca su NUM_COLS/CAT_COLS opzionali (già filtrate con 'if c in df.columns'
+    piu' avanti), ma su quelle senza le quali la pipeline non puo' funzionare."""
+    required_cols = {'churn', 'Customer_ID'}.union(SKEWED_VARS)
+    missing = required_cols - set(df.columns)
+    if missing:
+        raise SchemaValidationError(
+            f"Colonne obbligatorie mancanti nel dataset: {sorted(missing)}"
+        )
+
+    # churn deve essere binario (0/1), altrimenti train_test_split con
+    # stratify e le metriche a valle non hanno senso
+    valid_churn_values = set(df['churn'].dropna().unique()) - {0, 1}
+    if valid_churn_values:
+        raise SchemaValidationError(
+            f"Colonna 'churn' contiene valori non validi (attesi 0/1): {valid_churn_values}"
+        )
+
+
+def prepare_data(input_path: str = RAW_DATA_PATH, output_dir: Path = OUTPUT_DIR, dag_run_id: str = None):
+    start = datetime.now(timezone.utc)
+    log_event(dag_run_id, 'data_preparation', 'started', started_at=start)
  
     # decimal=',' : il CSV sorgente usa la virgola come separatore decimale
     # (es. '1504,62'). Senza questo parametro le colonne numeriche vengono
@@ -70,6 +97,8 @@ def prepare_data(input_path: str = RAW_DATA_PATH, output_dir: Path = OUTPUT_DIR)
     
     for col in df.select_dtypes(include=['category']).columns:
         df[col] = df[col].cat.remove_unused_categories()
+
+    validate_input_schema(df)
 
     # Drop colonne con troppi missing (>35%) - stesso step dello script
     # originale di sviluppo, mancava in questa pipeline.
@@ -119,6 +148,10 @@ def prepare_data(input_path: str = RAW_DATA_PATH, output_dir: Path = OUTPUT_DIR)
     high_card_cols = [c for c in HIGH_CARD_COLS if c in cat_cols_final]
     rare_categories = {}
     for col in high_card_cols:
+        if pd.api.types.is_categorical_dtype(X_train[col]):
+            X_train[col] = X_train[col].cat.add_categories(['Other'])
+        if pd.api.types.is_categorical_dtype(X_test[col]):
+            X_test[col] = X_test[col].cat.add_categories(['Other'])
         counts = X_train[col].value_counts()
         rare = counts[counts < MIN_OBS].index
         rare_categories[col] = rare
@@ -167,7 +200,10 @@ def prepare_data(input_path: str = RAW_DATA_PATH, output_dir: Path = OUTPUT_DIR)
  
     print(f"Dati salvati in {output_dir}")
     print(f"X_train: {X_train.shape}, X_test: {X_test.shape}")
- 
+    
+    log_event(dag_run_id, 'data_preparation', 'completed', started_at=start,
+              details={'X_train_shape': list(X_train.shape), 'X_test_shape': list(X_test.shape)})
+
     return str(output_dir)
  
  

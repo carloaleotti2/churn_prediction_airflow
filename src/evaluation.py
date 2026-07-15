@@ -3,43 +3,30 @@ Task 3 - evaluation
 Carica il modello allenato e il test set, calcola le metriche sull'hold-out,
 salva un log in JSON.
 """
-import json
-import pickle
-from pathlib import Path
-from datetime import datetime, timezone
-import mlflow
-import pandas as pd
-from sklearn.metrics import (
-    roc_auc_score, recall_score, precision_score, f1_score, confusion_matrix
-)
-
-MLFLOW_TRACKING_URI = "http://mlflow:5000"
-PROCESSED_DIR = Path("/opt/airflow/data/processed")
-MODEL_DIR = Path("/opt/airflow/models")
-METRICS_DIR = Path("/opt/airflow/logs/metrics")
-
 
 import json
 import pickle
 from pathlib import Path
 from datetime import datetime, timezone
-
+from process_logger import log_event
+from datetime import datetime, timezone
 import pandas as pd
 from sklearn.metrics import (
     roc_auc_score, recall_score, precision_score, f1_score, confusion_matrix
 )
 import mlflow
+import os
 
-MLFLOW_TRACKING_URI = "http://mlflow:5000"
-PROCESSED_DIR = Path("/opt/airflow/data/processed")
-MODEL_DIR = Path("/opt/airflow/models")
-METRICS_DIR = Path("/opt/airflow/logs/metrics")
+MLFLOW_TRACKING_URI = os.environ.get("MLFLOW_TRACKING_URI", "http://mlflow:5000")
+PROCESSED_DIR = Path(os.environ.get("PROCESSED_DATA_DIR", "/opt/airflow/data/processed"))
+MODEL_DIR = Path(os.environ.get("MODEL_DIR", "/opt/airflow/models"))
+METRICS_DIR = Path(os.environ.get("METRICS_DIR", "/opt/airflow/logs/metrics"))
 
 
-def evaluate_model(mlflow_run_id: str,
-                    processed_dir: Path = PROCESSED_DIR,
-                    model_dir: Path = MODEL_DIR,
-                    metrics_dir: Path = METRICS_DIR):
+def evaluate_model(mlflow_run_id, processed_dir=PROCESSED_DIR, model_dir=MODEL_DIR,
+                    metrics_dir=METRICS_DIR, dag_run_id: str = None):
+    start = datetime.now(timezone.utc)
+    log_event(dag_run_id, 'evaluation', 'started', started_at=start)
     metrics_dir.mkdir(parents=True, exist_ok=True)
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
@@ -84,6 +71,8 @@ def evaluate_model(mlflow_run_id: str,
 
     print(f"Metriche salvate in {metrics_path}")
     print(json.dumps(metrics, indent=2))
+
+    log_event(dag_run_id, 'evaluation', 'completed', started_at=start, details=metrics)
 
     return metrics
 

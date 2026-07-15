@@ -30,6 +30,4 @@ models/
 *.swp
 *.swo
 
-# Jupyter Notebook
-.ipynb_checkpoints/
-*.ipynb
+PLOT/

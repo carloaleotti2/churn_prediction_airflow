@@ -1,7 +1,7 @@
-pandas
-numpy
-scikit-learn
-xgboost
-pyarrow
-mlflow>=2.14
-psycopg2-binary
+pandas==2.3.3
+numpy==2.5.0
+scikit-learn==1.9.0
+xgboost==3.3.0
+pyarrow==24.0.0
+mlflow==3.14.0
+psycopg2-binary==2.9.12
