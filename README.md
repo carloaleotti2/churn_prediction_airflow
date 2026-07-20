@@ -55,6 +55,7 @@ churn_prediction_airflow/
 │   ├── test_data_preparation.py          # test automatici Task 1
 │   └── test_evaluation.py                # test automatici Task 3
 ├── notebooks/
+|   ├── data_descriptions.csv
 │   ├── EDA_FirstPart.ipynb               # analisi esplorativa
 │   ├── EDA_SecondPart.ipynb              # analisi esplorativa (continuazione)
 │   ├── Modelling.py                      # script di sviluppo modello (precursore di src/training.py)
