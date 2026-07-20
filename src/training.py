@@ -39,16 +39,19 @@ def train_model(processed_dir: Path = PROCESSED_DIR, model_dir: Path = MODEL_DIR
     log_event(dag_run_id, 'training', 'started', started_at=start)
     model_dir.mkdir(parents=True, exist_ok=True)
 
+    # per raggruppare le run nello stesso esperimento
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     mlflow.set_experiment("churn_prediction_v4")
 
     X_train = pd.read_parquet(processed_dir / 'X_train.parquet')
     y_train = pd.read_parquet(processed_dir / 'y_train.parquet')['churn']
 
+    # Ulteriore train/validation interno al training per early stopping
     X_tr, X_val, y_tr, y_val = train_test_split(
         X_train, y_train, test_size=0.15, random_state=42, stratify=y_train
     )
     
+    # apre una run, tutto ciò che segue viene tracciato nello stesso run_id
     with mlflow.start_run() as run:
         xgb = XGBClassifier(**BEST_PARAMS, eval_metric='auc', random_state=42, n_jobs=-1, early_stopping_rounds=30)
         xgb.fit(X_tr, y_tr, eval_set=[(X_val, y_val)], verbose=False)
@@ -58,6 +61,7 @@ def train_model(processed_dir: Path = PROCESSED_DIR, model_dir: Path = MODEL_DIR
         mlflow.log_metric('best_iteration', xgb.best_iteration)
         mlflow.xgboost.log_model(xgb, "model")
 
+        # carica l'artefatto, aggiunge le chiavi 'model' e 'decision threshold'
         with open(processed_dir / 'preprocessing_artifact.pkl', 'rb') as f:
             artifact = pickle.load(f)
         artifact['model'] = xgb

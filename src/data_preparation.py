@@ -45,9 +45,11 @@ HIGH_CARD_COLS = ['crclscod', 'area', 'ethnic']
 MIN_OBS = 30
 MISSING_THRESHOLD = 35  # % oltre il quale una colonna viene droppata
 
+
 class SchemaValidationError(Exception):
     """Sollevato quando il dataset in input non rispetta lo schema minimo atteso."""
     pass 
+
 
 def validate_input_schema(df: pd.DataFrame):
     """Verifica che le colonne critiche siano presenti prima di processare.
@@ -60,8 +62,8 @@ def validate_input_schema(df: pd.DataFrame):
             f"Colonne obbligatorie mancanti nel dataset: {sorted(missing)}"
         )
 
-    # churn deve essere binario (0/1), altrimenti train_test_split con
-    # stratify e le metriche a valle non hanno senso
+    # churn deve essere binario (0/1)
+    # solleva SchemaValidationError con messaggio esplicito
     valid_churn_values = set(df['churn'].dropna().unique()) - {0, 1}
     if valid_churn_values:
         raise SchemaValidationError(
@@ -73,9 +75,7 @@ def prepare_data(input_path: str = RAW_DATA_PATH, output_dir: Path = OUTPUT_DIR,
     start = datetime.now(timezone.utc)
     log_event(dag_run_id, 'data_preparation', 'started', started_at=start)
  
-    # decimal=',' : il CSV sorgente usa la virgola come separatore decimale
-    # (es. '1504,62'). Senza questo parametro le colonne numeriche vengono
-    # lette come stringhe e qualunque cast successivo produce NaN silenziosi.
+    # Lettura a Chunk, con downcast dei dtype, per ridurre uso di memoria
 
     CHUNK_SIZE = 2000
     chunks = []
@@ -90,6 +90,7 @@ def prepare_data(input_path: str = RAW_DATA_PATH, output_dir: Path = OUTPUT_DIR,
             chunk[col] = chunk[col].astype('category')
         chunks.append(chunk)
 
+    # scelta per contenere il picco di RAM nell'ambiente Docker
     df = pd.concat(chunks, ignore_index=True)
     del chunks
     import gc
@@ -100,8 +101,7 @@ def prepare_data(input_path: str = RAW_DATA_PATH, output_dir: Path = OUTPUT_DIR,
 
     validate_input_schema(df)
 
-    # Drop colonne con troppi missing (>35%) - stesso step dello script
-    # originale di sviluppo, mancava in questa pipeline.
+    # Drop colonne con troppi missing (>35%)
     missing_pct = df.isna().mean().sort_values(ascending=False) * 100
     cols_to_drop = missing_pct[missing_pct > MISSING_THRESHOLD].index.tolist()
     print("Drop (missing > 35%):", cols_to_drop)
@@ -110,6 +110,7 @@ def prepare_data(input_path: str = RAW_DATA_PATH, output_dir: Path = OUTPUT_DIR,
     num_cols = [c for c in NUM_COLS if c in df.columns]
     cat_cols = [c for c in CAT_COLS if c in df.columns]
  
+    # split X|y e Train/Test split stratificato
     X = df.drop(columns=['churn', 'Customer_ID'])
     y = df['churn']
     del df
@@ -121,14 +122,20 @@ def prepare_data(input_path: str = RAW_DATA_PATH, output_dir: Path = OUTPUT_DIR,
     del X,y
     gc.collect()
 
-    # 1. Log transform skewed vars
+    # Log transform skewed vars
     for col in SKEWED_VARS:
         X_train[col] = pd.to_numeric(X_train[col], errors='coerce')
         X_test[col] = pd.to_numeric(X_test[col], errors='coerce')
         X_train[f'{col}_log'] = np.log1p(X_train[col].clip(lower=0))
         X_test[f'{col}_log'] = np.log1p(X_test[col].clip(lower=0))
+
+    # Drop delle colonne originali skewed: la versione log le sostituisce.
+    # Senza questo drop, originale e log finivano entrambe tra le feature
+    # (correlazione ~1 tra loro, doppio conteggio nella SHAP/feature importance).
+    X_train = X_train.drop(columns=SKEWED_VARS)
+    X_test = X_test.drop(columns=SKEWED_VARS)
  
-    # 2. Imputazione (fit su train)
+    # Imputazione (fit su train)
     num_cols_final = X_train.select_dtypes(include='number').columns
     cat_cols_final = X_train.select_dtypes(include=['object', 'category']).columns
     # Aggiungi 'Missing' come categoria valida prima del fillna
@@ -144,7 +151,7 @@ def prepare_data(input_path: str = RAW_DATA_PATH, output_dir: Path = OUTPUT_DIR,
     X_train[cat_cols_final] = X_train[cat_cols_final].fillna('Missing')
     X_test[cat_cols_final] = X_test[cat_cols_final].fillna('Missing')
  
-    # 3. Target encoding alta cardinalità (fit su train)
+    # Target encoding alta cardinalità (fit su train)
     high_card_cols = [c for c in HIGH_CARD_COLS if c in cat_cols_final]
     rare_categories = {}
     for col in high_card_cols:
@@ -166,7 +173,7 @@ def prepare_data(input_path: str = RAW_DATA_PATH, output_dir: Path = OUTPUT_DIR,
         X_train[f'{col}_target_enc'] = X_train[col].map(target_mean)
         X_test[f'{col}_target_enc'] = X_test[col].map(target_mean).fillna(global_mean)
  
-    # 4. One-hot bassa cardinalità
+    # One-hot bassa cardinalità
     low_card_cols = [c for c in cat_cols_final if c not in high_card_cols]
     X_train = pd.get_dummies(X_train, columns=low_card_cols, drop_first=True, dtype='int8')
     X_test = pd.get_dummies(X_test, columns=low_card_cols, drop_first=True, dtype='int8')

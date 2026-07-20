@@ -30,6 +30,7 @@ def evaluate_model(mlflow_run_id, processed_dir=PROCESSED_DIR, model_dir=MODEL_D
     metrics_dir.mkdir(parents=True, exist_ok=True)
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
+    # caricamento del modello
     with open(model_dir / 'churn_xgb_model.pkl', 'rb') as f:
         artifact = pickle.load(f)
     model = artifact['model']
@@ -64,6 +65,7 @@ def evaluate_model(mlflow_run_id, processed_dir=PROCESSED_DIR, model_dir=MODEL_D
             'holdout_f1': metrics['f1'],
         })
 
+    # salvataggio in JSON locale
     run_id = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
     metrics_path = metrics_dir / f'metrics_{run_id}.json'
     with open(metrics_path, 'w') as f:
